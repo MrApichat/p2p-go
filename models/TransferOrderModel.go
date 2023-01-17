@@ -14,3 +14,9 @@ type TransferRequest struct {
 	Coin          string  `form:"coin" json:"coin"`
 	Amount        float64 `form:"amount" json:"amount"`
 }
+
+type TransferFilter struct {
+	Type string
+	Coin string
+	Status string
+}

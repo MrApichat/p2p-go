@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/MrApichat/p2p-go/db"
 	"github.com/MrApichat/p2p-go/models"
@@ -26,7 +27,7 @@ func CreateTransfer(c echo.Context) error {
 	}
 
 	if cc.User.Email == request.ReceiverEmail {
-		// return utilities.HandleError(cc, "You cannot send coins to yourself.", http.StatusBadRequest)
+		return utilities.HandleError(cc, "You cannot send coins to yourself.", http.StatusBadRequest)
 	}
 
 	//get coin
@@ -58,7 +59,7 @@ func CreateTransfer(c echo.Context) error {
 	}
 
 	if swallet.Total-swallet.InOrder < request.Amount {
-		// return utilities.HandleError(cc, "Your balance has not enough to send.", http.StatusBadRequest)
+		return utilities.HandleError(cc, "Your balance has not enough to send.", http.StatusBadRequest)
 	}
 
 	//receiver wallet
@@ -140,5 +141,86 @@ func CreateTransfer(c echo.Context) error {
 		"data":    order,
 		"rwal":    rwallet,
 		"swal":    swallet,
+	})
+}
+
+func ShowTransfer(c echo.Context) error {
+	request := &models.TransferFilter{}
+	//validate
+	if err := c.Bind(&request); err != nil {
+		return utilities.HandleError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	//check login
+	cc, isLogin := utilities.IsLogin(c)
+	if isLogin == false {
+		return utilities.HandleError(cc, "Please Login", http.StatusUnauthorized)
+	}
+
+	q := `select to2.id, to2.amount, to2.status,
+	to2.sender_id, u.name as sender_name, u.email as sender_email,
+	to2.receiver_id, u2.name as receiver_name, u2.email as receiver_email,
+	to2.coin_id , c."type" as coin_type, c."name"  as coin_name
+	from transfer_orders to2 
+	left join users u on to2.sender_id = u.id 
+	left join users u2 on to2.receiver_id = u2.id 
+	left join currencies c on c.id = to2.coin_id`
+
+	i := 1
+	vals := []interface{}{}
+	switch request.Type {
+	case "sender":
+		q = q + " WHERE to2.sender_id=$1"
+		i++
+		vals = append(vals, cc.User.Id)
+
+	case "receiver":
+		q = q + " WHERE to2.receiver_id=$1"
+		i++
+		vals = append(vals, cc.User.Id)
+	default:
+		q = q + " WHERE to2.sender_id=$1 OR to2.receiver_id=$2"
+		i = i + 2
+		vals = append(vals, cc.User.Id, cc.User.Id)
+	}
+
+	if request.Coin != "" {
+		q = q + "AND c.name=$" + strconv.Itoa(i)
+		i++
+		vals = append(vals, request.Coin)
+	}
+
+	if request.Status != "" {
+		q = q + "AND to2.status=$" + strconv.Itoa(i)
+		vals = append(vals, request.Status)
+	}
+
+	rows, err := db.Db.Query(q, vals...)
+
+	if err != nil {
+		return utilities.HandleError(c, "Query:"+err.Error(), http.StatusInternalServerError)
+	}
+
+	orders := []models.TransferOrderModel{}
+	for rows.Next() {
+		var order models.TransferOrderModel
+		err := rows.Scan(&order.Id, &order.Amount, &order.Status,
+			&order.Sender.Id, &order.Sender.Name, &order.Sender.Email,
+			&order.Receiver.Id, &order.Receiver.Name, &order.Receiver.Email,
+			&order.Coin.Id, &order.Coin.Type, &order.Coin.Name,
+		)
+		if err != nil {
+			return utilities.HandleError(c, "Scan:"+err.Error(), http.StatusInternalServerError)
+		}
+		orders = append(orders, order)
+	}
+
+	if rows.Err(); err != nil {
+		return utilities.HandleError(c, "rows.Err:"+err.Error(), http.StatusInternalServerError)
+	}
+
+	return c.JSON(http.StatusCreated, map[string]interface{}{
+		"success": true,
+		"list":    orders,
 	})
 }
