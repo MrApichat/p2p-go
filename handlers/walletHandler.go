@@ -20,7 +20,7 @@ func GetWallets(c echo.Context) error {
 	SELECT w.id, w.coin_id, w.total, w.in_order , c.type, c.name 
 	FROM wallets w 
 	LEFT JOIN currencies c 
-	ON w.coin_id =c.id;`)
+	ON w.coin_id =c.id WHERE w.user_id = $1;`, cc.User.Id)
 
 	if err != nil {
 		return utilities.HandleError(cc, "query:"+err.Error(), http.StatusInternalServerError)
