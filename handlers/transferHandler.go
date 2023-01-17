@@ -115,7 +115,7 @@ func CreateTransfer(c echo.Context) error {
 
 	// try to send to receiver wallet
 	rwallet.Total = rwallet.Total + order.Amount
-	_, err = tx.Exec(`UPDATE wallets SET total=$1 WHERE id=$2ss`, rwallet.Total, rwallet.Id)
+	_, err = tx.Exec(`UPDATE wallets SET total=$1 WHERE id=$2`, rwallet.Total, rwallet.Id)
 	if err != nil {
 		fail()
 		return utilities.HandleError(c, err.Error(), http.StatusInternalServerError)
