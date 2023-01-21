@@ -1,14 +1,12 @@
 package utilities
 
 import (
-	"net/http"
-
 	"github.com/MrApichat/p2p-go/models"
 	"github.com/labstack/echo/v4"
 )
 
 func HandleError(c echo.Context, message string, status int) error {
-	return c.JSON(http.StatusInternalServerError,
+	return c.JSON(status,
 		map[string]interface{}{
 			"message": message,
 			"success": false})

@@ -146,7 +146,7 @@ func CreateTransfer(c echo.Context) error {
 
 func ShowTransfer(c echo.Context) error {
 	request := &models.TransferFilter{}
-	//validate
+
 	if err := c.Bind(&request); err != nil {
 		return utilities.HandleError(c, err.Error(), http.StatusBadRequest)
 	}

@@ -15,14 +15,14 @@ func Auth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var header []string
 		header = c.Request().Header["Authorization"]
-		user := models.UserModel{}
+		user := models.DisplayUserModel{}
 		if header != nil {
 			author := c.Request().Header["Authorization"][0]
 			authToken := strings.Split(author, "Bearer ")[1]
 
 			//get user data
-			row := db.Db.QueryRow(`SELECT id,name, email, remember_token FROM users WHERE remember_token=$1`, authToken)
-			err := row.Scan(&user.Id, &user.Name, &user.Email, &user.RememberToken)
+			row := db.Db.QueryRow(`SELECT id,name, email FROM users WHERE remember_token=$1`, authToken)
+			err := row.Scan(&user.Id, &user.Name, &user.Email)
 			if err != nil {
 				if err == sql.ErrNoRows {
 					if err == sql.ErrNoRows {

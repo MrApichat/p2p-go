@@ -9,6 +9,12 @@ type UserModel struct {
 	RememberToken string `json:"rememberToken"`
 }
 
+type DisplayUserModel struct {
+	Id            int    `json:"id"`
+	Name          string `json:"name"`
+	Email         string `json:"email"`
+}
+
 type RegisterModel struct {
 	Name            string `form:"name" json:"name"`
 	Email           string `form:"email" json:"email"`
@@ -23,5 +29,5 @@ type LoginModel struct {
 
 type UserContext struct {
 	echo.Context
-	User UserModel
+	User DisplayUserModel
 }

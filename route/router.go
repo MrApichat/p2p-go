@@ -20,4 +20,5 @@ func Router(e *echo.Echo) {
 	g.GET("/wallets", handlers.GetWallets)
 	g.POST("/transfer_orders", handlers.CreateTransfer)
 	g.GET("/transfer_orders", handlers.ShowTransfer)
+	g.POST("/merchant_orders", handlers.CreateMerchant)
 }
