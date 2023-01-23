@@ -213,7 +213,7 @@ func ShowMerchant(c echo.Context) error {
 
 
 	//check login
-	cc, isLogin := utilities.IsLogin(c)
+	// cc, isLogin := utilities.IsLogin(c)
 	// if isLogin == false {
 	// 	return utilities.HandleError(cc, "Please Login", http.StatusUnauthorized)
 	// }
