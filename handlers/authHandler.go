@@ -9,15 +9,22 @@ import (
 	"github.com/MrApichat/p2p-go/db"
 	"github.com/MrApichat/p2p-go/models"
 	"github.com/MrApichat/p2p-go/utilities"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
 
+var v = validator.New()
+
 func Register(c echo.Context) error {
-	register := &models.RegisterModel{}
+	register := models.RegisterModel{}
 
 	//validate request
-	if err := c.Bind(register); err != nil {
+	if err := c.Bind(&register); err != nil {
 		return utilities.HandleError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	if err := v.Struct(register); err != nil {
+		return utilities.HandleError(c, utilities.ValidationError(err), http.StatusBadRequest)
 	}
 
 	//password = confirm_password
@@ -135,15 +142,16 @@ func Register(c echo.Context) error {
 }
 
 func Login(c echo.Context) error {
-	login := &models.LoginModel{}
+	login := models.LoginModel{}
 	user := models.UserModel{}
 	var password string
 
-	if err := c.Bind(login); err != nil {
-		return c.JSON(http.StatusBadRequest,
-			map[string]interface{}{
-				"message": err.Error(),
-				"success": false})
+	if err := c.Bind(&login); err != nil {
+		return utilities.HandleError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	if err := v.Struct(login); err != nil {
+		return utilities.HandleError(c, utilities.ValidationError(err), http.StatusBadRequest)
 	}
 
 	//get user data

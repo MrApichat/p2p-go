@@ -23,6 +23,14 @@ type MerchantRequest struct {
 	PaymentMethods []string `form:"payment_methods" json:"payment_methods"`
 }
 
+type MerchantShowRequest struct {
+	Type MerchantType `query:"type" form:"type" json:"type" validate:"required"`
+	Fiat string `query:"fiat" form:"fiat" json:"fiat" validate:"required"`
+	Coin string `query:"coin" form:"coin" json:"coin" validate:"required"`
+	PaymentMethod string `json:"payment_method"`
+	IsHistory bool
+}
+
 type MerchantType string
 
 const (

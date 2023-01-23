@@ -13,11 +13,15 @@ import (
 )
 
 func CreateMerchant(c echo.Context) error {
-	var request = &models.MerchantRequest{}
+	var request = models.MerchantRequest{}
 
 	//validate
 	if err := c.Bind(&request); err != nil {
 		return utilities.HandleError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	if err := v.Struct(request); err != nil {
+		return utilities.HandleError(c, utilities.ValidationError(err), http.StatusBadRequest)
 	}
 
 	//check login
@@ -192,5 +196,31 @@ func CreateMerchant(c echo.Context) error {
 	return c.JSON(http.StatusCreated, map[string]interface{}{
 		"success": true,
 		"data":    order,
+	})
+}
+
+func ShowMerchant(c echo.Context) error {
+	var request = models.MerchantShowRequest{}
+
+	//validate
+	if err := c.Bind(&request); err != nil {
+		return utilities.HandleError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	if err := v.Struct(request); err != nil {
+		return utilities.HandleError(c, utilities.ValidationError(err), http.StatusBadRequest)
+	}
+
+
+	//check login
+	cc, isLogin := utilities.IsLogin(c)
+	// if isLogin == false {
+	// 	return utilities.HandleError(cc, "Please Login", http.StatusUnauthorized)
+	// }
+
+	//response
+	return c.JSON(http.StatusCreated, map[string]interface{}{
+		"success": true,
+		"data":    request,
 	})
 }

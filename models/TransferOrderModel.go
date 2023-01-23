@@ -10,13 +10,13 @@ type TransferOrderModel struct {
 }
 
 type TransferRequest struct {
-	ReceiverEmail string  `form:"receiver_email" json:"receiver_email"`
-	Coin          string  `form:"coin" json:"coin"`
-	Amount        float64 `form:"amount" json:"amount"`
+	ReceiverEmail string  `form:"receiver_email" json:"receiver_email" validate:"required"`
+	Coin          string  `form:"coin" json:"coin" validate:"required"`
+	Amount        float64 `form:"amount" json:"amount" validate:"required"`
 }
 
 type TransferFilter struct {
-	Type string
+	Type string 
 	Coin string
 	Status string
 }

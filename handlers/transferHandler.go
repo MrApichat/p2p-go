@@ -20,6 +20,10 @@ func CreateTransfer(c echo.Context) error {
 		return utilities.HandleError(c, err.Error(), http.StatusBadRequest)
 	}
 
+	if err := v.Struct(order); err != nil {
+		return utilities.HandleError(c, utilities.ValidationError(err), http.StatusBadRequest)
+	}
+
 	//check login
 	cc, isLogin := utilities.IsLogin(c)
 	if isLogin == false {

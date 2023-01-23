@@ -10,21 +10,21 @@ type UserModel struct {
 }
 
 type DisplayUserModel struct {
-	Id            int    `json:"id"`
-	Name          string `json:"name"`
-	Email         string `json:"email"`
+	Id    int    `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 type RegisterModel struct {
-	Name            string `form:"name" json:"name"`
-	Email           string `form:"email" json:"email"`
-	Password        string `form:"password" json:"password"`
-	ConfirmPassword string `form:"confirm_password" json:"confirm_password"`
+	Name            string `form:"name" json:"name" validate:"required"`
+	Email           string `form:"email" json:"email" validate:"required"`
+	Password        string `form:"password" json:"password" validate:"required"`
+	ConfirmPassword string `form:"confirm_password" json:"confirm_password" validate:"required"`
 }
 
 type LoginModel struct {
-	Email    string `form:"email" json:"email"`
-	Password string `form:"password" json:"password"`
+	Email    string `form:"email" json:"email" validate:"required"`
+	Password string `form:"password" json:"password" validate:"required"`
 }
 
 type UserContext struct {
