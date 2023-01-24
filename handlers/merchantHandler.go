@@ -10,6 +10,7 @@ import (
 	"github.com/MrApichat/p2p-go/models"
 	"github.com/MrApichat/p2p-go/utilities"
 	"github.com/labstack/echo/v4"
+	"github.com/lib/pq"
 )
 
 func CreateMerchant(c echo.Context) error {
@@ -211,16 +212,77 @@ func ShowMerchant(c echo.Context) error {
 		return utilities.HandleError(c, utilities.ValidationError(err), http.StatusBadRequest)
 	}
 
-
 	//check login
 	// cc, isLogin := utilities.IsLogin(c)
 	// if isLogin == false {
 	// 	return utilities.HandleError(cc, "Please Login", http.StatusUnauthorized)
 	// }
 
+	q := `select mo.id, mo."type", 
+	mo.fiat_id, c."name" as fiat_name, c."type" as fiat_type, 
+	mo.coin_id, c2."name" as coin_name, c2."type" as coin_type,  
+	mo.merchant_id, u."name"  as merchant_name, u.email as merchant_email,
+	mo.price, mo.available_coin, mo.lower_limit, mo.status,
+	array_agg(pm.id) as pm_ids, array_agg(pm.name) as pm_names  
+	from merchant_orders mo 
+	left join currencies c on c.id = mo.fiat_id 
+	left join currencies c2 on c2.id = mo.coin_id 
+	left join users u on u.id = mo.merchant_id 
+	left join merchant_orders_payment_methods mopm ON mopm.merchant_order_id = mo .id
+	left join payment_methods pm on mopm.payment_method_id = pm.id where mo.type 
+	where mo."type" = $1 and c."name" = $2 and c2."name" = $3
+	group by mo.id, c.id, c2.id, u.id`
+
+	rows, err := db.Db.Query(q, request.Type, request.Fiat, request.Coin)
+	if err != nil {
+		return utilities.HandleError(c, "Query:"+err.Error(), http.StatusInternalServerError)
+	}
+	orders := []models.MerchantOrderModel{}
+
+	pm_ids := []sql.NullInt64{}
+	pm_names := []sql.NullString{}
+	for rows.Next() {
+		var order models.MerchantOrderModel
+		wantPm := false
+		err := rows.Scan(&order.Id, &order.Type,
+			&order.Fiat.Id, &order.Fiat.Name, &order.Fiat.Type,
+			&order.Coin.Id, &order.Coin.Name, &order.Coin.Type,
+			&order.Merchant.Id, &order.Merchant.Name, &order.Merchant.Email,
+			&order.Price, &order.AvailableCoin, &order.LowerLimit, &order.Status,
+			pq.Array(&pm_ids), pq.Array(&pm_names),
+		)
+		if len(pm_ids) != len(pm_names) {
+			return utilities.HandleError(c, "something went wrong in query", http.StatusInternalServerError)
+		}
+		if err != nil {
+			return utilities.HandleError(c, "Scan:"+err.Error(), http.StatusInternalServerError)
+		}
+
+		for i := range pm_ids {
+			tmp, _ := pm_ids[i].Value()
+			id, _ := tmp.(int64)
+			tmp, _ = pm_names[i].Value()
+			name, _ := tmp.(string)
+			if request.PaymentMethod == "" {
+				wantPm = true
+			} else if request.PaymentMethod == name {
+				wantPm = true
+			}
+			order.PaymentMethods = append(order.PaymentMethods, models.PaymentMethodModel{Id: id, Name: name})
+		}
+
+		if wantPm {
+			orders = append(orders, order)
+		}
+	}
+
+	if rows.Err(); err != nil {
+		return utilities.HandleError(c, "rows.Err:"+err.Error(), http.StatusInternalServerError)
+	}
+
 	//response
 	return c.JSON(http.StatusCreated, map[string]interface{}{
 		"success": true,
-		"data":    request,
+		"data":    orders,
 	})
 }
